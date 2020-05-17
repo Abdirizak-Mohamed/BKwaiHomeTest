@@ -1,45 +1,161 @@
+const moment = require("moment");
+
+// Function Converts data from db into a format usablge by the charting library
+//This fuction also filters the data to return only those values that fall between the date range specified
+
+function handleSensorReadingRequest(data, startDate, endDate) {
+  let sensorReadingsEdited = transformData(data);
+
+  let dog = filterByDate(sensorReadingsEdited, startDate, endDate);
+  return dog;
+}
+
 function transformData(data) {
-  let transformedData = [];
+  let sensorReadingsEdited = [];
   let unitDateTime = "";
   let individualUnit = {};
 
   for (let i = 0; i < data.length; i++) {
-    if (unitDateTime === "") {
-      individualUnit[data[i].sensor_type] = data[i].value;
-      individualUnit["datetime"] = constructDateObject(data[i].datetime);
-      unitDateTime = data[i].datetime;
-      console.log("FirstTime", i, unitDateTime);
-    } else if (unitDateTime === data[i].datetime) {
-      individualUnit[data[i].sensor_type] = data[i].value;
-      console.log("Middle", i, unitDateTime);
-    } else {
-      transformedData.push(individualUnit);
-      console.log("Push Bitch", i, individualUnit);
-      individualUnit = {};
-      individualUnit[data[i].sensor_type] = data[i].value;
-      individualUnit["datetime"] = constructDateObject(data[i].datetime);
-      unitDateTime = data[i].datetime;
-      console.log("Push Bitch 2", i, individualUnit);
+    if (
+      data[i].sensor_type !== "ob_temp" &&
+      data[i].sensor_type !== "ob_voltage"
+    ) {
+      if (unitDateTime === "") {
+        individualUnit[data[i].sensor_type] = data[i].value;
+        individualUnit["datetime"] = data[i].datetime;
+        unitDateTime = data[i].datetime;
+      } else if (unitDateTime === data[i].datetime) {
+        individualUnit[data[i].sensor_type] = data[i].value;
+
+        if (i === data.length - 1) {
+          sensorReadingsEdited.push(individualUnit);
+        }
+      } else {
+        sensorReadingsEdited.push(individualUnit);
+        individualUnit = {};
+        individualUnit[data[i].sensor_type] = data[i].value;
+        individualUnit["datetime"] = data[i].datetime;
+        unitDateTime = data[i].datetime;
+      }
     }
   }
-  return transformedData;
+
+  return orderDataChronologically(sensorReadingsEdited);
 }
 
-function constructDateObject(stringDate) {
-  let splitDate = stringDate.split(" ");
-  let splitTime = splitDate[1].split(":");
-  var parts = splitDate[0].split("/");
-  console.log(parts);
-  console.log(splitTime);
-  var date = new Date(
-    parseInt(parts[2], 10),
-    parseInt(parts[1], 10) - 1,
-    parseInt(parts[0], 10),
-    parseInt(splitTime[0], 10),
-    parseInt(splitTime[1], 10)
+function orderDataChronologically(sensorReadingGroups) {
+  let sortedReadingGroups = sensorReadingGroups.sort(function(a, b) {
+    if (
+      moment(a["datetime"], "DD-MM-YYYY HH:mm").isBefore(
+        moment(b["datetime"], "DD-MM-YYYY HH:mm")
+      )
+    ) {
+      return -1;
+    } else if (
+      moment(a["datetime"], "DD-MM-YYYY HH:mm").isAfter(
+        moment(b["datetime"], "DD-MM-YYYY HH:mm")
+      )
+    ) {
+      return 1;
+    } else {
+      return 0;
+    }
+  });
+  return sortedReadingGroups;
+}
+
+function filterByDate(sensorReadingsEdited, startDate, endDate) {
+  return sensorReadingsEdited.filter(date =>
+    isCorrectDate(date, startDate, endDate)
+  );
+}
+
+function isCorrectDate(date, startDate, endDate) {
+  let isDateAfterStart = moment(date["datetime"], "DD-MM-YYYY HH:mm").isAfter(
+    moment(startDate, "DD-MM-YYYY HH:mm"),
+    "seconds"
   );
 
-  return date;
+  let isDateBeforeEnd = moment(date["datetime"], "DD-MM-YYYY HH:mm").isBefore(
+    moment(endDate, "DD-MM-YYYY HH:mm"),
+    "seconds"
+  );
+
+  return isDateAfterStart && isDateBeforeEnd;
 }
 
-module.exports = transformData;
+function createAlerts(sensorReadings) {
+  let transformedSensorReadings = transformData(sensorReadings);
+  let sensorReadingsEdited = mergeDuplicateDatetimes(transformedSensorReadings);
+
+  let prevResult = {};
+  let alerts = [];
+
+  let axes = ["tilt_x", "tilt_y", "tilt_z"];
+
+  for (let sensorReadingGroup of sensorReadingsEdited) {
+    if (!prevResult) {
+      prevResult = sensorReadingGroup;
+      continue;
+    }
+
+    for (let axis of axes) {
+      if (prevResult[axis] && sensorReadingGroup[axis]) {
+        let changeInReading = calculatePercentageChange(
+          prevResult[axis],
+          sensorReadingGroup[axis]
+        );
+        console.log(changeInReading);
+        if (changeInReading > 1) {
+          if (changeInReading > 5) {
+            sensorReadingGroup["alertColour"] = "Red";
+            sensorReadingGroup["percentageChange"] = changeInReading;
+            sensorReadingGroup["dangerInAxis"] = axis;
+            alerts.push(prevResult);
+            alerts.push(sensorReadingGroup);
+          } else {
+            sensorReadingGroup["alertColour"] = "Orange";
+            sensorReadingGroup["percentageChange"] = changeInReading;
+            sensorReadingGroup["dangerInAxis"] = axis;
+            alerts.push(sensorReadingGroup);
+          }
+        }
+      }
+    }
+    prevResult = sensorReadingGroup;
+  }
+  console.log(alerts);
+  return alerts;
+}
+
+function calculatePercentageChange(prevResult, currentResult) {
+  let difference = currentResult - prevResult;
+  let changeInReading = Math.abs(difference / prevResult) * 100;
+  return changeInReading;
+}
+
+function mergeDuplicateDatetimes(sensorReadingsEdited) {
+  let mergedReadings = [];
+  for (let reading of sensorReadingsEdited) {
+    if (!mergedReadings.length) {
+      mergedReadings.push(reading);
+    } else if (
+      mergedReadings[mergedReadings.length - 1].datetime === reading.datetime
+    ) {
+      mergedReadings[mergedReadings.length - 1] = {
+        ...mergedReadings[mergedReadings.length - 1],
+        ...reading
+      };
+    } else {
+      mergedReadings.push(reading);
+    }
+  }
+  return mergedReadings;
+}
+
+module.exports = {
+  handleSensorReadingRequest: handleSensorReadingRequest,
+  createAlerts: createAlerts,
+  transformData: transformData,
+  filterByDate: filterByDate
+};

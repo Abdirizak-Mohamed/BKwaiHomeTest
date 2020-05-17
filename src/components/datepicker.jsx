@@ -5,9 +5,14 @@ import "react-semantic-ui-datepickers/dist/react-semantic-ui-datepickers.css";
 class DatePicker extends Component {
   state = {};
   render() {
-    const onChange = (event, data) => console.log(data.value);
+    const { handleDateChange } = this.props;
     return (
-      <SemanticDatepicker onChange={onChange} type="range" label="Date Range" />
+      <SemanticDatepicker
+        onChange={handleDateChange}
+        type="range"
+        label="Date Range"
+        format={"DD-MM-YYYY"}
+      />
     );
   }
 }

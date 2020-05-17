@@ -1,10 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const Sensor = require("../models/sensorData");
-const transformData = require("./dataHelpers");
+const {
+  handleSensorReadingRequest,
+  createAlerts,
+  transformData
+} = require("./dataHelpers");
 
-router.get("/:sensorID/:sensorTypes", (req, res) => {
-  const { sensorID } = req.params;
+router.get("/:sensorID/:startDate/:endDate", (req, res) => {
+  const { sensorID, startDate, endDate } = req.params;
   console.log(sensorID);
 
   Sensor.find(
@@ -13,10 +17,22 @@ router.get("/:sensorID/:sensorTypes", (req, res) => {
       if (err) {
         res.status(500).send({ error: "Error connecting to DB" });
       } else {
-        res.status(200).send(transformData(data));
+        res
+          .status(200)
+          .send(handleSensorReadingRequest(data, startDate, endDate));
       }
     }
   );
+});
+
+router.get("/alerts", (req, res) => {
+  Sensor.find({ name: "sensor_2" }, (err, data) => {
+    if (err) {
+      res.status(500).send({ error: "Error connecting to DB" });
+    } else {
+      res.status(200).send(createAlerts(data));
+    }
+  });
 });
 
 module.exports = router;

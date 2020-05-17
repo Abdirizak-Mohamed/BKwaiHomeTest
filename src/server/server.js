@@ -23,9 +23,11 @@ mongoose.connection.on("connected", () => {
 
 // Importing routes
 const sensor = require("./routes/sensorData");
+const weather = require("./routes/weatherData");
 
 // Use user route when url matches /api/user/
 app.use("/api/sensor", sensor);
+app.use("/api/weather", weather);
 
 // Creating server
 app.listen(port, () => {
