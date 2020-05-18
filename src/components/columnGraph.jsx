@@ -22,33 +22,63 @@ class ColumnGraph extends Component {
   }*/
 
   createChart = async () => {
-    let chart = am4core.create("chartdiv", am4charts.XYChart);
+    let chart = am4core.create(this.props.chart, am4charts.XYChart);
     const { sensorTypes } = this.props;
     chart.dateFormatter.inputDateFormat = "dd/MM/yyyy HH:mm";
-    chart.dataSource.url = this.props.chartURL;
+    //chart.dataSource.url = this.props.chartURL;
+    chart.colors.step = 2;
 
     let dateAxis = chart.xAxes.push(new am4charts.DateAxis());
     dateAxis.dataFields.category = "datetime";
+    dateAxis.title.text = "Reading Date";
 
     let valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
     valueAxis.dataFields.category = "tilt_y";
-    valueAxis.title.text = "Tilt Displacement Degrees";
+    valueAxis.title.text = "Tilt Displacement (°)";
+
+    let weatherValueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+    weatherValueAxis.renderer.opposite = true;
+    weatherValueAxis.title.text = "Temperature (°C)";
 
     //Initialise Series for each Axis
     const tiltAxis = sensorTypes;
     for (let tilt of tiltAxis) {
       this.createSeries(tilt, chart);
     }
+    this.createWeatherSeries(chart);
+    chart.legend = new am4charts.Legend();
     console.log(chart.series);
     this.chart = chart;
   };
 
-  createSeries(tiltAxis, chart) {
+  createWeatherSeries(chart) {
+    let weatherSeries = chart.series.push(new am4charts.LineSeries());
+    weatherSeries.dataSource.url = this.props.weatherURL;
+    weatherSeries.yAxis = chart.yAxes.getIndex(1);
+    weatherSeries.dataFields.dateX = "time";
+    weatherSeries.dataFields.valueY = "temperature";
+    weatherSeries.name = "Temperature";
+  }
+
+  createSeries = async (tiltAxis, chart, chartURL) => {
     var series = chart.series.push(new am4charts.ColumnSeries());
+    series.dataSource.url = this.props.chartURL;
     series.dataFields.dateX = "datetime";
     series.dataFields.valueY = tiltAxis;
     series.name = tiltAxis;
     return series;
+  };
+
+  updateSeries(sensorTypes, chart) {
+    let initialLength = chart.series.length;
+    for (let i = 0; i < initialLength; i++) {
+      chart.series.removeIndex(0).dispose();
+    }
+
+    for (let tilt of sensorTypes) {
+      this.createSeries(tilt, chart);
+    }
+    this.createWeatherSeries(chart);
   }
 
   componentWillUnmount() {
@@ -57,30 +87,22 @@ class ColumnGraph extends Component {
     }
   }
   componentDidUpdate(oldProps) {
-    if (oldProps.chartURL !== this.props.chartURL) {
-      this.chart.dataSource.url = this.props.chartURL;
-      this.chart.dataSource.load();
-    }
-
-    if (oldProps.sensorTypes !== this.props.sensorTypes) {
-      this.tiltAxis = this.props.sensorTypes;
-      console.log("series", this.chart.series);
-      let initialLength = this.chart.series.length;
-      for (let i = 0; i < initialLength; i++) {
-        this.chart.series.removeIndex(0).dispose();
-      }
-      console.log("length2", this.chart.series.length);
-      for (let tilt of this.tiltAxis) {
-        console.log("tilt:", tilt);
-        this.createSeries(tilt, this.chart);
-      }
+    if (
+      oldProps.chartURL !== this.props.chartURL ||
+      oldProps.sensorTypes !== this.props.sensorTypes
+    ) {
+      const { sensorTypes } = this.props;
+      this.updateSeries(sensorTypes, this.chart);
     }
   }
 
   render() {
-    console.log(this.props);
+    const { chart, height } = this.props;
+    console.log(height);
 
-    return <div id="chartdiv" style={{ width: "100%", height: "500px" }}></div>;
+    return (
+      <div id={chart} style={{ width: "100%", height: `${height}` }}></div>
+    );
   }
 }
 

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Card, Grid } from "semantic-ui-react";
+import { Card, Grid, Header } from "semantic-ui-react";
 import { url } from "../constants";
 import ColumnGraph from "../components/columnGraph";
 import ScatterGraph from "../components/scatterGraph";
@@ -11,7 +11,7 @@ class GraphsDisplay extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      graphType: "line",
+      graphType: "column",
       sensor: "sensor_1",
       startDate: "",
       endDate: "",
@@ -21,6 +21,7 @@ class GraphsDisplay extends Component {
       tilt_x: true,
       data: [],
       chartURL: `${url}/sensor/sensor_1/31-12-2019 00:00/07-01-2020 00:00/`,
+      weatherURL: `${url}/weather/31-12-2019 00:00/07-01-2020 00:00/`,
       displayGraph: "column"
     };
   }
@@ -36,23 +37,30 @@ class GraphsDisplay extends Component {
   };*/
 
   handleDateChange = (event, data) => {
-    this.setState(
-      {
-        startDate: moment(data.value[0]).format("DD-MM-YYYY HH:SS"),
-        endDate: moment(data.value[1]).format("DD-MM-YYYY HH:SS")
-      },
-      () => {
-        this.checkdate();
-      }
-    );
+    this.setState({
+      startDate: moment(data.value[0]).format("DD-MM-YYYY HH:SS"),
+      endDate: moment(data.value[1]).format("DD-MM-YYYY HH:SS")
+    });
   };
 
   handleSubmit = () => {
     const { sensor, startDate, endDate, graphType } = this.state;
     let axis = this.getAxis();
+
     let getUpdatedChartURL = `${sensor}/${startDate}/${endDate}/`;
+    let getUpdateWeatherURL = `weather/${startDate}/${endDate}`;
+
+    if (!startDate || !endDate) {
+      getUpdatedChartURL = `${sensor}/31-12-2019 00:00/07-01-2020 00:00/`;
+      getUpdateWeatherURL = `weather/31-12-2019 00:00/07-01-2020 00:00/`;
+    } else {
+      getUpdatedChartURL = `${sensor}/${startDate}/${endDate}/`;
+      getUpdateWeatherURL = `weather/${startDate}/${endDate}`;
+    }
+
     this.setState({
       chartURL: `${url}/sensor/${getUpdatedChartURL}`,
+      weatherURL: `${url}/${getUpdateWeatherURL}`,
       sensorTypes: axis,
       displayGraph: graphType
     });
@@ -72,11 +80,6 @@ class GraphsDisplay extends Component {
       tiltAxis.push("tilt_z");
     }
     return tiltAxis;
-  };
-
-  checkdate = () => {
-    const { startDate, endDate } = this.state;
-    console.log(moment(startDate).isBefore(endDate));
   };
 
   handleDropdownChange = (event, data) => {
@@ -103,8 +106,10 @@ class GraphsDisplay extends Component {
       tilt_z,
       graphType,
       chartURL,
-      displayGraph
+      displayGraph,
+      weatherURL
     } = this.state;
+    const { chart, height } = this.props;
 
     let renderedGraph;
     if (displayGraph === "scatter") {
@@ -115,6 +120,9 @@ class GraphsDisplay extends Component {
           startDate={startDate}
           endDate={endDate}
           chartURL={chartURL}
+          weatherURL={weatherURL}
+          chart={chart}
+          height={height}
         />
       );
     } else if (displayGraph === "line") {
@@ -125,6 +133,9 @@ class GraphsDisplay extends Component {
           startDate={startDate}
           endDate={endDate}
           chartURL={chartURL}
+          weatherURL={weatherURL}
+          chart={chart}
+          height={height}
         />
       );
     } else {
@@ -135,15 +146,35 @@ class GraphsDisplay extends Component {
           startDate={startDate}
           endDate={endDate}
           chartURL={chartURL}
+          weatherURL={weatherURL}
+          chart={chart}
+          height={height}
         />
       );
     }
 
+    let cardHeight = height + 30;
+
     return (
-      <Card style={{ width: "34cm" }}>
-        <Grid>
+      <Card
+        style={{
+          width: "70vw",
+          height: "83vh",
+          backgroundColor: "#fff5d7",
+          paddingTop: "0.6cm"
+        }}
+      >
+        <Grid
+          style={{
+            width: "70vw",
+            height: `${height}`,
+            paddingTop: "1vh",
+            paddingLeft: "2vw"
+          }}
+        >
           <Grid.Row>
             <Grid.Column>
+              <Header as="h3">Weather and Sensor Data</Header>
               <GraphForm
                 handleDateChange={this.handleDateChange}
                 handleDropdownChange={(event, data) =>
@@ -160,7 +191,7 @@ class GraphsDisplay extends Component {
             </Grid.Column>
           </Grid.Row>
 
-          <Grid.Row columns="1">
+          <Grid.Row columns="1" stretched>
             <Grid.Column>{renderedGraph}</Grid.Column>
           </Grid.Row>
         </Grid>

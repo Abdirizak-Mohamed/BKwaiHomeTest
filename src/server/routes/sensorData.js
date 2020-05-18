@@ -25,12 +25,13 @@ router.get("/:sensorID/:startDate/:endDate", (req, res) => {
   );
 });
 
-router.get("/alerts", (req, res) => {
-  Sensor.find({ name: "sensor_2" }, (err, data) => {
+router.get("/alerts/:sensorID", (req, res) => {
+  const { sensorID } = req.params;
+  Sensor.find({ name: sensorID }, (err, data) => {
     if (err) {
       res.status(500).send({ error: "Error connecting to DB" });
     } else {
-      res.status(200).send(createAlerts(data));
+      res.status(200).send(createAlerts(data, sensorID));
     }
   });
 });

@@ -7,7 +7,7 @@ class CheckBoxes extends Component {
     const { handleCheckboxChange, tilt_y, tilt_z, tilt_x } = this.props;
     return (
       <Form.Group inline>
-        <label>Axis</label>
+        <label style={{ paddingLeft: "0.7vw" }}>Axis</label>
         <Form.Checkbox
           label="X-Axis"
           name={"tilt_x"}

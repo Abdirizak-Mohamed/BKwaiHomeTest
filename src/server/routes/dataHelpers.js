@@ -84,7 +84,7 @@ function isCorrectDate(date, startDate, endDate) {
   return isDateAfterStart && isDateBeforeEnd;
 }
 
-function createAlerts(sensorReadings) {
+function createAlerts(sensorReadings, sensorID) {
   let transformedSensorReadings = transformData(sensorReadings);
   let sensorReadingsEdited = mergeDuplicateDatetimes(transformedSensorReadings);
 
@@ -105,18 +105,20 @@ function createAlerts(sensorReadings) {
           prevResult[axis],
           sensorReadingGroup[axis]
         );
-        console.log(changeInReading);
+
         if (changeInReading > 1) {
-          if (changeInReading > 5) {
-            sensorReadingGroup["alertColour"] = "Red";
+          if (changeInReading > 3) {
+            sensorReadingGroup["alertColour"] = "red";
             sensorReadingGroup["percentageChange"] = changeInReading;
             sensorReadingGroup["dangerInAxis"] = axis;
+            sensorReadingGroup["name"] = sensorID;
             alerts.push(prevResult);
             alerts.push(sensorReadingGroup);
           } else {
-            sensorReadingGroup["alertColour"] = "Orange";
+            sensorReadingGroup["alertColour"] = "orange";
             sensorReadingGroup["percentageChange"] = changeInReading;
             sensorReadingGroup["dangerInAxis"] = axis;
+            sensorReadingGroup["name"] = sensorID;
             alerts.push(sensorReadingGroup);
           }
         }
