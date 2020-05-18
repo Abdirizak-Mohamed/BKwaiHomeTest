@@ -5,7 +5,6 @@ class CommentList extends Component {
   state = {};
   render() {
     const { comments } = this.props;
-    console.log(comments);
 
     let commentList;
     if (comments) {

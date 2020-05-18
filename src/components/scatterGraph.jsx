@@ -51,7 +51,6 @@ class ColumnGraph extends Component {
   }
 
   createSeries(tiltAxis, chart) {
-    console.log("hi");
     var series = chart.series.push(new am4charts.LineSeries());
     series.dataSource.url = this.props.chartURL;
     series.dataFields.dateX = "datetime";

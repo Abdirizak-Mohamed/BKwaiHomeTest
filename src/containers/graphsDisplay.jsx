@@ -25,16 +25,6 @@ class GraphsDisplay extends Component {
       displayGraph: "column"
     };
   }
-  componentDidMount() {}
-
-  /*  getStats = async () => {
-    const { sensor, sensorTypes } = this.state;
-    let res = await fetch(`${url}/sensor/${sensor}/${sensorTypes}`);
-    let response = await res.json();
-    console.log(response);
-
-    this.setState({ data: response });
-  };*/
 
   handleDateChange = (event, data) => {
     this.setState({
@@ -70,7 +60,6 @@ class GraphsDisplay extends Component {
     const { tilt_x, tilt_y, tilt_z } = this.state;
     let tiltAxis = [];
     if (tilt_x) {
-      console.log("hi");
       tiltAxis.push("tilt_x");
     }
     if (tilt_y) {
@@ -83,16 +72,11 @@ class GraphsDisplay extends Component {
   };
 
   handleDropdownChange = (event, data) => {
-    console.log("dr", data);
-    this.setState({ [data.name]: data.value }, () => {
-      console.log(this.state);
-    });
+    this.setState({ [data.name]: data.value }, () => {});
   };
 
   handleCheckboxChange = (event, data) => {
-    this.setState({ [data.name]: data.checked }, () => {
-      console.log(this.state);
-    });
+    this.setState({ [data.name]: data.checked }, () => {});
   };
 
   render() {
@@ -152,8 +136,6 @@ class GraphsDisplay extends Component {
         />
       );
     }
-
-    let cardHeight = height + 30;
 
     return (
       <Card

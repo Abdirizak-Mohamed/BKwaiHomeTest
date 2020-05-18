@@ -40,7 +40,7 @@ class ColumnGraph extends Component {
     //initialse Weather series
     this.createWeatherSeries(chart);
     chart.legend = new am4charts.Legend();
-    console.log(chart.yAxes.getIndex(1));
+
     this.chart = chart;
   };
 

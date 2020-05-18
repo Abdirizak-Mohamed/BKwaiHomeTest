@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Grid, List, Icon } from "semantic-ui-react";
+import { List, Icon } from "semantic-ui-react";
 
 class AlertList extends Component {
   state = {};
@@ -21,7 +21,6 @@ class AlertList extends Component {
         } = alert;
         let warningLevel;
         warningLevel = alertColour === "orange" ? "Amber Alert" : "Red Alert";
-        let axisChange = Math.round(parseInt(percentageChange));
 
         return (
           <List.Item>

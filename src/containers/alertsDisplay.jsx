@@ -18,12 +18,7 @@ class AlertsContainer extends Component {
     let sensorTwoRes = await fetch(`${url}/sensor/alerts/sensor_2`);
     let sensorOneResponse = await sensorOneRes.json();
     let sensorTwoResponse = await sensorTwoRes.json();
-    this.setState(
-      { alerts: sensorOneResponse.concat(sensorTwoResponse) },
-      () => {
-        console.log(this.state);
-      }
-    );
+    this.setState({ alerts: sensorOneResponse.concat(sensorTwoResponse) });
   };
 
   render() {

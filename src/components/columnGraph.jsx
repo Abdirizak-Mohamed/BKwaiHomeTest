@@ -47,7 +47,7 @@ class ColumnGraph extends Component {
     }
     this.createWeatherSeries(chart);
     chart.legend = new am4charts.Legend();
-    console.log(chart.series);
+
     this.chart = chart;
   };
 
@@ -98,7 +98,6 @@ class ColumnGraph extends Component {
 
   render() {
     const { chart, height } = this.props;
-    console.log(height);
 
     return (
       <div id={chart} style={{ width: "100%", height: `${height}` }}></div>

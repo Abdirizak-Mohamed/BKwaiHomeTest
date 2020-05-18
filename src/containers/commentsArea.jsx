@@ -45,12 +45,7 @@ class CommentsArea extends Component {
     });
     let response = await res.json();
     state.allComments.push(response.newComment);
-    this.setState(
-      { allComments: state.allComments, name: "", comment: "" },
-      () => {
-        console.log(this.state);
-      }
-    );
+    this.setState({ allComments: state.allComments, name: "", comment: "" });
   };
 
   getAllComments = async state => {

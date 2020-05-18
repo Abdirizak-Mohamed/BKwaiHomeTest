@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Menu, Button, Image } from "semantic-ui-react";
+import { Menu, Image } from "semantic-ui-react";
 import logo from "../assets/BKwai.png";
 import Clock from "../components/clock";
 
