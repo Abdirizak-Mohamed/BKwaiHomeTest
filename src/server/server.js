@@ -1,7 +1,7 @@
 // Importing modules
 var express = require("express");
 var mongoose = require("mongoose");
-const port = process.env.PORT || 443;
+const port = process.env.PORT || 3005;
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
